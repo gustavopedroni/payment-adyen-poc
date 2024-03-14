@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "noErrorTruncation": true,
+    "module": "CommonJS",
+    "target": "ESNext",
+    "strict": true,
+    "inlineSourceMap": true,
+    "strictPropertyInitialization": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "resolveJsonModule": true,
+    "allowArbitraryExtensions": true,
+    "incremental": true,
+    "baseUrl": "./",
+    "paths": {
+      "~/src/*": ["src/*"],
+      "~/tests/*": ["tests/*"],
+      "~/seeds/*": ["seeds/*"]
+    },
+    "outDir": "./dist"
+  }
+}
