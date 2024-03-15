@@ -9,6 +9,10 @@ type BasePaymentParams = {
   saleId: string
 }
 
+export type GetPaymentMethodsParams = {
+  merchantAccount: string
+}
+
 export type RequestPaymentParams = BasePaymentParams & {
   payment: {
     currency?: string

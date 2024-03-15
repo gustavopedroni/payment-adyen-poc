@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common'
+import { Body, Controller, Get, Post } from '@nestjs/common'
 
 import { AbortPaymentSchema } from '~/src/controllers/schemas/abort-payment.schema'
 import { CreatePaymentSchema } from '~/src/controllers/schemas/create-payment.schema'
@@ -8,6 +8,15 @@ import { AdyenService } from '~/src/services/adyen'
 @Controller('/payments')
 export class PaymentController {
   constructor(private readonly adyenService: AdyenService) {}
+
+  @Get('/methods')
+  async getPaymentMethods() {
+    const response = await this.adyenService.getPaymentMethods({
+      merchantAccount: 'Infracommerce_Peg2Go',
+    })
+
+    return response
+  }
 
   @Post('/create')
   async createPayment(

@@ -1,4 +1,9 @@
-import { Client, Config, TerminalCloudAPI } from '@adyen/api-library'
+import {
+  Client,
+  Config,
+  TerminalCloudAPI,
+  CheckoutAPI,
+} from '@adyen/api-library'
 import { TerminalApiRequest } from '@adyen/api-library/lib/src/typings/terminal/terminalApiRequest'
 import { Logger } from '@nestjs/common'
 
@@ -21,7 +26,14 @@ export class BaseAdyenService {
     return new Client({ config: this.getConfig() })
   }
 
-  private async getTerminalRequest() {
+  private async getCheckoutClient() {
+    const client = this.createClient()
+    const checkout = new CheckoutAPI(client)
+
+    return checkout
+  }
+
+  private async getTerminalClient() {
     const client = this.createClient()
     const terminalClient = new TerminalCloudAPI(client)
 
@@ -29,12 +41,27 @@ export class BaseAdyenService {
   }
 
   private async makeTerminalRequest(request: TerminalApiRequest) {
-    const terminal = await this.getTerminalRequest()
+    const terminal = await this.getTerminalClient()
     try {
       const response = await terminal.sync(request)
       return response
     } catch (err) {
       this.logger.error('Failed to make terminal request', err)
+      return null
+    }
+  }
+
+  protected async getPaymentMethodsRequest({
+    merchantAccount,
+  }: AdyenServiceTypes.GetPaymentMethodsParams) {
+    const checkout = await this.getCheckoutClient()
+    try {
+      const response = await checkout.PaymentsApi.paymentMethods({
+        merchantAccount,
+      })
+      return response
+    } catch (err) {
+      this.logger.error('Failed to make checkout request', err)
       return null
     }
   }

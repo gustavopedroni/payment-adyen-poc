@@ -9,10 +9,26 @@ import { BaseAdyenService } from './base'
 export class AdyenService extends BaseAdyenService {
   protected readonly logger = new Logger(AdyenService.name)
 
+  async getPaymentMethods(params: AdyenServiceTypes.GetPaymentMethodsParams) {
+    const response = await this.getPaymentMethodsRequest(params)
+
+    if (response === null) {
+      return {
+        result: 'error',
+        message: 'Failed to get payment methods',
+      }
+    }
+
+    return {
+      result: 'success',
+      message: 'Payment methods retrieved',
+      data: response,
+    }
+  }
+
   async reversalPayment(params: AdyenServiceTypes.ReversalPaymentParams) {
     const response = await this.reversalPaymentRequest(params)
-    const paymentResponse =
-      response?.SaleToPOIResponse?.ReversalResponse?.Response
+    const paymentResponse = response?.SaleToPOIResponse?.ReversalResponse
 
     if (response === null || !paymentResponse) {
       return {
@@ -21,20 +37,27 @@ export class AdyenService extends BaseAdyenService {
       }
     }
 
-    if (paymentResponse.Result !== ResultType.Success) {
+    if (paymentResponse.Response.Result !== ResultType.Success) {
       return {
         result: 'error',
         message: 'Failed to reverse payment',
         error: {
-          condition: paymentResponse.ErrorCondition,
-          message: paymentResponse.AdditionalResponse,
+          condition: paymentResponse.Response.ErrorCondition,
+          message: paymentResponse.Response.AdditionalResponse,
         },
       }
     }
 
+    const posData = paymentResponse.POIData?.POITransactionID
+
     return {
       result: 'success',
       message: 'Payment reversed',
+      transaction: {
+        pspReference: posData?.TransactionID,
+        posTransactionId: posData?.TransactionID,
+        posTransactionTimeStamp: posData?.TimeStamp,
+      },
     }
   }
 
@@ -67,6 +90,7 @@ export class AdyenService extends BaseAdyenService {
     const posData = paymentResponse.POIData.POITransactionID
     const saleData = paymentResponse.SaleData.SaleTransactionID
     const headers = response.SaleToPOIRequest?.MessageHeader
+    const [tenderReference, pspReference] = posData.TransactionID.split('.')
 
     if (paymentResponse.Response.Result !== ResultType.Success) {
       return {
@@ -78,7 +102,8 @@ export class AdyenService extends BaseAdyenService {
           posId: headers?.POIID,
         },
         transaction: {
-          refusalReason: paymentResponse.Response.ErrorCondition,
+          tenderReference,
+          pspReference,
           posTransactionId: posData.TransactionID,
           posTransactionTimeStamp: posData.TimeStamp,
           saleTransactionId: saleData.TransactionID,
@@ -100,9 +125,11 @@ export class AdyenService extends BaseAdyenService {
         posId: headers?.POIID,
       },
       transaction: {
-        posTransactionId: posData.TransactionID,
+        pspReference,
+        tenderReference,
+        posTransactionId: posData.TransactionID, // nsu
         posTransactionTimeStamp: posData.TimeStamp,
-        saleTransactionId: saleData.TransactionID,
+        saleTransactionId: saleData.TransactionID, // tid
         saleTransactionTimeStamp: saleData.TimeStamp,
       },
     }

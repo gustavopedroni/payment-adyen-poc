@@ -17,7 +17,7 @@ import { AdyenServiceTypes } from '~/src/services/adyen'
 export class AdyenMapper {
   private static PROTOCOL_VERSION = '3.0'
   private getNewTransactionId(): string {
-    return randomUUID()
+    return `TID-${randomUUID()}`
   }
 
   private getNewServiceId(): string {
